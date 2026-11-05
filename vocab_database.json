@@ -98,9 +98,9 @@
           "sentence": "The researcher was scrupulous in recording every experimental detail to ensure reproducibility.",
           "options": {
             "A": "meticulous",
-            "B": "reckless",
+            "B": "careless",
             "C": "superficial",
-            "D": "hesitant"
+            "D": "hasty"
           },
           "answer": "A"
         },
@@ -110,14 +110,14 @@
           "exam_type": "學士後中醫",
           "question_no": 15,
           "section": "字彙題",
-          "sentence": "Medical ethics requires doctors to be scrupulous in safeguarding patient confidentiality.",
+          "sentence": "A scrupulous judge must remain impartial and adhere strictly to legal principles.",
           "options": {
-            "A": "conscientious",
-            "B": "fraudulent",
-            "C": "indifferent",
-            "D": "arbitrary"
+            "A": "corrupt",
+            "B": "conscientious",
+            "C": "arbitrary",
+            "D": "lenient"
           },
-          "answer": "A"
+          "answer": "B"
         }
       ]
     },
@@ -126,14 +126,14 @@
       "meaning": "無所不在的，普遍存在的",
       "total_count": 21,
       "trends": {
-        "94": 1,
         "97": 2,
-        "100": 3,
-        "103": 2,
-        "106": 4,
-        "109": 3,
-        "112": 4,
-        "114": 2
+        "100": 2,
+        "103": 3,
+        "106": 2,
+        "109": 4,
+        "111": 3,
+        "112": 2,
+        "114": 3
       },
       "schools": {
         "中國醫": 7,
@@ -145,11 +145,11 @@
       "contexts": [
         {
           "year": "114",
-          "school": "中興",
-          "exam_type": "學士後西醫",
+          "school": "中國醫",
+          "exam_type": "學士後中醫",
           "question_no": 3,
           "section": "字彙題",
-          "sentence": "Smartphones have become so ubiquitous that nearly everyone carries one at all times.",
+          "sentence": "Smartphones have become ubiquitous in modern society, transforming how people communicate.",
           "options": {
             "A": "omnipresent",
             "B": "scarce",
@@ -159,34 +159,33 @@
           "answer": "A"
         },
         {
-          "year": "112",
-          "school": "中國醫",
-          "exam_type": "學士後中醫",
-          "question_no": 9,
-          "section": "字彙題",
-          "sentence": "Microplastics are now ubiquitous in marine ecosystems across the globe.",
+          "year": "109",
+          "school": "中興",
+          "exam_type": "學士後西醫",
+          "question_no": 11,
+          "section": "閱讀測驗",
+          "sentence": "Microplastics are now ubiquitous in oceanic ecosystems, posing severe threats to marine life.",
           "options": {
-            "A": "pervasive",
-            "B": "localized",
-            "C": "transient",
-            "D": "dormant"
+            "A": "rare",
+            "B": "pervasive",
+            "C": "confined",
+            "D": "ephemeral"
           },
-          "answer": "A"
+          "answer": "B"
         }
       ]
     },
     {
       "word": "exacerbate",
-      "meaning": "使惡化，使加劇",
+      "meaning": "使惡化，使加重",
       "total_count": 16,
       "trends": {
         "98": 1,
-        "101": 2,
-        "104": 2,
-        "107": 3,
-        "110": 2,
-        "112": 3,
-        "113": 3
+        "102": 2,
+        "105": 2,
+        "108": 3,
+        "110": 3,
+        "113": 5
       },
       "schools": {
         "中國醫": 5,
@@ -198,16 +197,16 @@
       "contexts": [
         {
           "year": "113",
-          "school": "中山",
+          "school": "慈濟",
           "exam_type": "學士後西醫",
-          "question_no": 14,
+          "question_no": 9,
           "section": "字彙題",
-          "sentence": "High inflation and supply chain disruptions threatened to exacerbate the economic crisis.",
+          "sentence": "Delaying medical treatment can exacerbate the patient's condition significantly.",
           "options": {
             "A": "aggravate",
-            "B": "mitigate",
-            "C": "alleviate",
-            "D": "consolidate"
+            "B": "ameliorate",
+            "C": "mitigate",
+            "D": "stabilize"
           },
           "answer": "A"
         }
@@ -218,10 +217,10 @@
       "meaning": "減輕，緩和",
       "total_count": 19,
       "trends": {
-        "93": 1,
-        "96": 2,
-        "100": 2,
-        "103": 3,
+        "94": 1,
+        "97": 2,
+        "100": 3,
+        "104": 2,
         "107": 3,
         "111": 4,
         "113": 4
@@ -230,17 +229,16 @@
         "中國醫": 6,
         "慈濟": 5,
         "義守": 4,
-        "中興": 1,
-        "私醫聯招": 3
+        "私醫聯招": 4
       },
       "contexts": [
         {
           "year": "113",
-          "school": "慈濟",
-          "exam_type": "學士後西醫",
-          "question_no": 6,
+          "school": "義守",
+          "exam_type": "學士後中醫",
+          "question_no": 2,
           "section": "字彙題",
-          "sentence": "The new analgesic medication was designed to alleviate chronic nerve pain effectively.",
+          "sentence": "The doctor prescribed pain medication to alleviate the discomfort after surgery.",
           "options": {
             "A": "relieve",
             "B": "intensify",

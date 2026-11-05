@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>學士後中西醫及私醫英文歷屆單字趨勢分析 (PostMed English Trends)</title>
     <!-- Tailwind CSS CDN -->
-    <script src="[suspicious link removed]"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js CDN -->
-    <script src="[suspicious link removed]"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Supabase JS Client -->
-    <script src="[suspicious link removed]"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="[suspicious link removed]">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .glass-panel {
             background: rgba(30, 41, 59, 0.75);
@@ -50,7 +50,7 @@
                     <i class="fa-solid fa-cloud"></i>
                     <span>雲端資料庫設定</span>
                 </button>
-                <button id="uploadModalBtn" class="px-3 me-1 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition shadow-md shadow-indigo-600/20 flex items-center space-x-2">
+                <button id="uploadModalBtn" class="px-3 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition shadow-md shadow-indigo-600/20 flex items-center space-x-2">
                     <i class="fa-solid fa-file-arrow-up"></i>
                     <span>上傳新考題 PDF</span>
                 </button>
@@ -92,7 +92,7 @@
                 <div id="wordTagsContainer" class="flex flex-wrap gap-2"></div>
 
                 <div class="relative flex-1 min-w-[200px]">
-                    <input type="text" id="wordInput" placeholder="輸入英文單字 (例如: detrimental, scrupulous, ubiquitous)..."
+                    <input type="text" id="wordInput" placeholder="輸入英文單字 (如: detrimental, scrupulous, ubiquitous)..."
                            class="w-full bg-transparent text-slate-100 placeholder-slate-500 text-sm focus:outline-none px-2 py-1">
                     <div id="autocompleteDropdown" class="hidden absolute left-0 right-0 top-full mt-2 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto"></div>
                 </div>
@@ -181,11 +181,11 @@
             <div class="space-y-3 text-xs">
                 <div>
                     <label class="block text-slate-300 mb-1">Supabase Project URL</label>
-                    <input type="text" id="supabaseUrlInput" placeholder="[suspicious link removed]" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-200">
+                    <input type="text" id="supabaseUrlInput" placeholder="YOUR_SUPABASE_PROJECT_URL" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-200">
                 </div>
                 <div>
                     <label class="block text-slate-300 mb-1">Supabase Anon Key</label>
-                    <input type="password" id="supabaseKeyInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-200">
+                    <input type="password" id="supabaseKeyInput" placeholder="YOUR_SUPABASE_ANON_KEY" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-200">
                 </div>
             </div>
             <div class="pt-2 flex justify-end">
@@ -228,6 +228,9 @@
         </div>
     </div>
 
+    <!-- 預載資料檔 (解決本地 file:// 直接雙擊時 fetch CORS 問題) -->
+    <script src="data.js"></script>
+    <!-- 主程式腳本 -->
     <script src="app.js"></script>
 </body>
 </html>

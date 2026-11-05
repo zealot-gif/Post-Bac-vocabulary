@@ -1,492 +1,233 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" class="h-full bg-slate-950 text-slate-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>學士後中醫 歷屆英文單字頻率與趨勢分析系統</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- PDF.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>學士後中西醫及私醫英文歷屆單字趨勢分析 (PostMed English Trends)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="[suspicious link removed]"></script>
+    <!-- Chart.js CDN -->
+    <script src="[suspicious link removed]"></script>
+    <!-- Supabase JS Client -->
+    <script src="[suspicious link removed]"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="[suspicious link removed]">
     <style>
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .highlight-word {
+            background-color: rgba(234, 179, 8, 0.25);
+            color: #fef08a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            border-bottom: 2px solid #eab308;
+        }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-800 min-h-screen flex flex-col">
+<body class="h-full font-sans antialiased bg-slate-950 text-slate-100 flex flex-col min-h-screen">
 
-    <!-- Header Navigation -->
-    <header class="bg-slate-900 text-white shadow-md border-b border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+    <!-- 頂部導航欄 -->
+    <header class="sticky top-0 z-40 border-b border-slate-800 glass-panel">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <div class="bg-emerald-500 p-2 rounded-lg text-slate-900">
-                    <i class="fa-solid fa-chart-line text-xl"></i>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid fa-chart-line"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold tracking-wide">學士後中醫 英文考題單字趨勢分析系統</h1>
-                    <p class="text-xs text-slate-400">中國醫 / 慈濟 / 義守 歷屆真題統計與語境調閱</p>
+                    <h1 class="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400">
+                        PostMed English Trends
+                    </h1>
+                    <p class="text-xs text-slate-400">學士後中西醫 & 私醫聯招 英文高頻單字聲量與歷年考題上下文檢索器</p>
                 </div>
             </div>
-            <div>
-                <!-- 使用 onclick 直連函數，避免 addEventListener 被前端錯誤中斷 -->
-                <button onclick="toggleImportModal(true)" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-4 py-2 rounded-lg transition-all flex items-center shadow cursor-pointer">
-                    <i class="fa-solid fa-file-pdf mr-2"></i> 匯入真題 (PDF/文字)
+
+            <div class="flex items-center space-x-3">
+                <button id="cloudSyncBtn" class="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-slate-700 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-cloud"></i>
+                    <span>雲端資料庫設定</span>
+                </button>
+                <button id="uploadModalBtn" class="px-3 me-1 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition shadow-md shadow-indigo-600/20 flex items-center space-x-2">
+                    <i class="fa-solid fa-file-arrow-up"></i>
+                    <span>上傳新考題 PDF</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- Left Column: Controls & Word Frequency -->
-        <div class="lg:col-span-4 flex flex-col gap-6">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">單字搜尋與比對</h2>
-                <div class="relative mb-4">
-                    <input type="text" id="searchInput" oninput="renderWordList()" placeholder="輸入英文單字 (如: shield, zenith)..." 
-                           class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
+    <!-- 主內容區塊 -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- 搜尋與多字比較列 (Google Trends 樣式) -->
+        <section class="glass-panel rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass text-indigo-400"></i>
+                        單字搜尋與歷年趨勢比較
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">輸入單字進行比對（可同時加入多個單字比較 93 ~ 114 學年度出現頻率曲線）</p>
                 </div>
-                <div class="grid grid-cols-2 gap-3 text-xs">
-                    <div>
-                        <label class="block font-medium text-slate-600 mb-1">學校篩選</label>
-                        <select id="schoolSelect" onchange="onFilterChange()" class="w-full border border-slate-300 rounded-md p-2 bg-white">
-                            <option value="ALL">全部學校</option>
-                            <option value="中國醫">中國醫</option>
-                            <option value="慈濟">慈濟</option>
-                            <option value="義守">義守</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block font-medium text-slate-600 mb-1">排序方式</label>
-                        <select id="sortSelect" onchange="renderWordList()" class="w-full border border-slate-300 rounded-md p-2 bg-white">
-                            <option value="freq">出現總次數 ⬇</option>
-                            <option value="alpha">字母順序 ⬆</option>
-                        </select>
-                    </div>
+
+                <!-- 學校篩選選單 -->
+                <div class="flex items-center space-x-2 text-xs">
+                    <span class="text-slate-400">學校篩選：</span>
+                    <select id="schoolFilter" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500">
+                        <option value="ALL">全部學校 (中國醫/慈濟/義守/中興/中山/私醫)</option>
+                        <option value="中國醫">中國醫藥大學 (學士後中醫)</option>
+                        <option value="慈濟">慈濟大學 (學士後西醫)</option>
+                        <option value="義守">義守大學 (學士後中醫)</option>
+                        <option value="中興">國立中興大學 (學士後西醫)</option>
+                        <option value="中山">國立中山大學 (學士後西醫)</option>
+                        <option value="私醫聯招">私醫聯招英文</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex-grow flex flex-col min-h-[400px]">
-                <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">真題單字庫 <span id="wordCountBadge" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full ml-1">0 字</span></h2>
-                    <span class="text-xs text-slate-400">點擊單字查看趨勢</span>
-                </div>
-                <div id="wordList" class="custom-scrollbar overflow-y-auto flex-grow divide-y divide-slate-100 max-h-[500px]"></div>
-            </div>
-        </div>
+            <!-- 單字 Tag 輸入框 -->
+            <div class="flex flex-wrap items-center gap-2 bg-slate-950/80 border border-slate-800 rounded-xl p-3 focus-within:border-indigo-500 transition">
+                <div id="wordTagsContainer" class="flex flex-wrap gap-2"></div>
 
-        <!-- Right Column: Trends Chart & Context -->
-        <div class="lg:col-span-8 flex flex-col gap-6">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-                    <div>
-                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md uppercase">Google Trends 風格分析</span>
-                        <h2 id="chartTitle" class="text-xl font-bold text-slate-800 mt-1">單字歷年出現頻率趨勢</h2>
-                    </div>
-                    <div id="activeWordChip" class="hidden items-center bg-slate-800 text-white px-3 py-1 rounded-full text-xs font-medium">
-                        目前單字: <span id="chipWord" class="font-bold text-emerald-400 ml-1"></span>
-                        <button onclick="clearActiveWord()" class="ml-2 hover:text-red-400"><i class="fa-solid fa-xmark"></i></button>
-                    </div>
+                <div class="relative flex-1 min-w-[200px]">
+                    <input type="text" id="wordInput" placeholder="輸入英文單字 (例如: detrimental, scrupulous, ubiquitous)..."
+                           class="w-full bg-transparent text-slate-100 placeholder-slate-500 text-sm focus:outline-none px-2 py-1">
+                    <div id="autocompleteDropdown" class="hidden absolute left-0 right-0 top-full mt-2 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto"></div>
                 </div>
-                <div class="relative w-full h-[280px]">
-                    <canvas id="trendChart"></canvas>
-                </div>
+
+                <button id="addWordBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-lg transition shadow-md">
+                    <i class="fa-solid fa-plus me-1"></i> 加入比較
+                </button>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex-grow flex flex-col min-h-[350px]">
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">試題上下文調閱 (Context Drill-Down)</h2>
-                        <p class="text-xs text-slate-400 mt-0.5">點擊單字或圖表節點，自動檢視對應年份與學校的真題出處與選項</p>
-                    </div>
-                    <span id="sentenceCountBadge" class="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-md font-medium">共 0 筆語境</span>
-                </div>
-                <div id="sentenceContainer" class="custom-scrollbar overflow-y-auto flex-grow space-y-4 max-h-[450px]"></div>
+            <!-- 熱門高頻單字預設按鈕 -->
+            <div class="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                <span class="text-slate-500 font-medium"><i class="fa-solid fa-bolt text-yellow-400 me-1"></i>高頻熱門單字：</span>
+                <button class="preset-tag px-2.5 py-1 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-md border border-slate-700/60 transition" data-word="detrimental">detrimental</button>
+                <button class="preset-tag px-2.5 py-1 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-md border border-slate-700/60 transition" data-word="scrupulous">scrupulous</button>
+                <button class="preset-tag px-2.5 py-1 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-md border border-slate-700/60 transition" data-word="ubiquitous">ubiquitous</button>
+                <button class="preset-tag px-2.5 py-1 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-md border border-slate-700/60 transition" data-word="exacerbate">exacerbate</button>
+                <button class="preset-tag px-2.5 py-1 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-md border border-slate-700/60 transition" data-word="alleviate">alleviate</button>
             </div>
-        </div>
+        </section>
+
+        <!-- 圖表與統計區塊 -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Google Trends 走勢圖 -->
+            <div class="lg:col-span-2 glass-panel rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-chart-area text-indigo-400"></i>
+                            歷年出現頻率趨勢圖 (93 ~ 114 學年度)
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-0.5">點擊走勢圖節點即可自動切換並調閱當年度試題與完整上下文</p>
+                    </div>
+                </div>
+
+                <div class="relative w-full h-[320px]">
+                    <canvas id="trendsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 各校命題分佈統計 -->
+            <div class="glass-panel rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2 mb-3">
+                        <i class="fa-solid fa-building-columns text-purple-400"></i>
+                        各校命題分佈統計
+                    </h3>
+                    <div id="schoolStatsContainer" class="space-y-3"></div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-400 flex items-center justify-between">
+                    <span>收錄試題數量：82 份 PDF</span>
+                    <span id="activeWordCountDisplay" class="text-indigo-400 font-semibold">載入中...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 考題上下文調閱區塊 -->
+        <section class="glass-panel rounded-2xl p-6 shadow-xl">
+            <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-4 mb-6 gap-4">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-file-lines text-emerald-400"></i>
+                        考題上下文與選項實例調閱器 (Context Viewer)
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-1">點選單字自動呈現該字在各校考題中的完整句型、題型與四選一選項</p>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <label for="contextWordSelect" class="text-xs text-slate-400">目前檢視單字：</label>
+                    <select id="contextWordSelect" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl px-4 py-2 font-semibold text-indigo-400 focus:outline-none"></select>
+                </div>
+            </div>
+
+            <div id="contextList" class="space-y-4"></div>
+        </section>
+
     </main>
 
-    <!-- Import Modal -->
-    <div id="importModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full mx-4 overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="bg-slate-900 px-6 py-4 text-white flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i>
-                    <h3 class="font-bold text-base">匯入歷屆試題 (支援直接讀取 PDF)</h3>
-                </div>
-                <button onclick="toggleImportModal(false)" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <!-- Supabase 設定 Modal -->
+    <div id="cloudModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div class="glass-panel bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white"><i class="fa-solid fa-database text-indigo-400 me-2"></i>Supabase 雲端資料庫連線</h3>
+                <button id="closeCloudModal" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-
-            <div class="p-6 overflow-y-auto custom-scrollbar flex-grow space-y-5">
-                <div class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-xl p-6 text-center transition bg-slate-50 hover:bg-emerald-50/30 group cursor-pointer relative">
-                    <input type="file" id="pdfFileInput" onchange="handlePDFFileSelect(event)" accept=".pdf,.txt" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                    <div class="flex flex-col items-center">
-                        <i class="fa-solid fa-file-pdf text-4xl text-slate-400 group-hover:text-emerald-500 mb-2 transition"></i>
-                        <p class="text-sm font-semibold text-slate-700">點擊或拖放 PDF 官方試題檔至此</p>
-                        <p class="text-xs text-slate-400 mt-1">系統將自動提取文字並還原單字結構 (亦支援 .txt 檔)</p>
-                    </div>
-                </div>
-
-                <div class="flex items-center my-2">
-                    <div class="flex-grow border-t border-slate-200"></div>
-                    <span class="px-3 text-xs text-slate-400 font-medium">或直接貼上文字</span>
-                    <div class="flex-grow border-t border-slate-200"></div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">對應學校</label>
-                        <select id="importSchool" class="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white">
-                            <option value="慈濟">慈濟</option>
-                            <option value="中國醫">中國醫</option>
-                            <option value="義守">義守</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">考題學年度</label>
-                        <input type="text" id="importYear" value="115" class="w-full text-sm border border-slate-300 rounded-lg p-2">
-                    </div>
-                </div>
-
+            <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">試題文字內容</label>
-                    <textarea id="importTextarea" rows="6" placeholder="例如：1. Wearing protective gloves when handling harsh chemicals... (A) consume (B) preside (C) shield (D) tackle" 
-                              class="w-full border border-slate-300 rounded-lg p-3 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"></textarea>
+                    <label class="block text-slate-300 mb-1">Supabase Project URL</label>
+                    <input type="text" id="supabaseUrlInput" placeholder="[suspicious link removed]" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-200">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">Supabase Anon Key</label>
+                    <input type="password" id="supabaseKeyInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-200">
                 </div>
             </div>
-
-            <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-end space-x-3">
-                <button onclick="toggleImportModal(false)" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">取消</button>
-                <button onclick="handleManualTextImport()" class="px-4 py-2 text-xs font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition">開始解析並載入資料庫</button>
+            <div class="pt-2 flex justify-end">
+                <button id="saveCloudSettings" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg">儲存連線並刷新</button>
             </div>
         </div>
     </div>
 
-    <!-- Application Script -->
-    <script>
-        // 設定 PDF.js worker CDN (使用安全相容載入)
-        if (typeof pdfjsLib !== 'undefined') {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        }
+    <!-- 上傳試題 Modal -->
+    <div id="uploadModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div class="glass-panel bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white"><i class="fa-solid fa-file-circle-plus text-indigo-400 me-2"></i>上傳新年份試題 (PDF)</h3>
+                <button id="closeUploadModal" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-300 mb-1">選擇學校 / 考別</label>
+                    <select id="uploadSchool" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-200">
+                        <option value="中國醫">中國醫藥大學 (學士後中醫)</option>
+                        <option value="慈濟">慈濟大學 (學士後西醫)</option>
+                        <option value="義守">義守大學 (學士後中醫)</option>
+                        <option value="中興">國立中興大學 (學士後西醫)</option>
+                        <option value="中山">國立中山大學 (學士後西醫)</option>
+                        <option value="私醫聯招">私醫聯招英文</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">學年度 (例如: 115)</label>
+                    <input type="number" id="uploadYear" value="115" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-200">
+                </div>
+                <div>
+                    <label class="block text-slate-300 mb-1">上傳考題檔案 (PDF / TXT)</label>
+                    <input type="file" id="uploadFileInput" accept=".pdf,.txt" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-400">
+                </div>
+            </div>
+            <div class="pt-2 flex justify-end">
+                <button id="startUploadBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg">開始解析並更新資料庫</button>
+            </div>
+        </div>
+    </div>
 
-        const STOP_WORDS = new Set([
-            "a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at", 
-            "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can", "can't", "cannot", "could",
-            "did", "do", "does", "doing", "down", "during", "each", "few", "for", "from", "further", "had", "has", "have", "having",
-            "he", "her", "here", "hers", "herself", "him", "himself", "his", "how", "i", "if", "in", "into", "is", "it", "its", "itself",
-            "just", "me", "more", "most", "my", "myself", "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "our",
-            "ours", "ourselves", "out", "over", "own", "same", "she", "should", "so", "some", "such", "than", "that", "the", "their",
-            "theirs", "them", "themselves", "then", "there", "these", "they", "this", "those", "through", "to", "too", "under", "until",
-            "up", "very", "was", "we", "were", "what", "when", "where", "which", "while", "who", "whom", "why", "with", "would", "you", "your"
-        ]);
-
-        let examDatabase = [
-            {
-                id: "115-TC-1", school: "慈濟", year: "115", qnum: "1",
-                sentence: "Wearing protective gloves when handling harsh chemicals in scientific experiments is to ____ your nails from potential staining and damage.",
-                options: ["(A) consume", "(B) preside", "(C) shield", "(D) tackle"],
-                keywords: ["wearing", "protective", "gloves", "handling", "harsh", "chemicals", "scientific", "experiments", "shield", "nails", "potential", "staining", "damage"]
-            },
-            {
-                id: "115-TC-2", school: "慈濟", year: "115", qnum: "2",
-                sentence: "Copenhagen's cycle network is different because the bike paths are built into the city's infrastructure, not added later as an ____.",
-                options: ["(A) afterthought", "(B) overload", "(C) intuition", "(D) epigram"],
-                keywords: ["copenhagen", "cycle", "network", "different", "bike", "paths", "built", "city", "infrastructure", "added", "afterthought", "overload", "intuition", "epigram"]
-            },
-            {
-                id: "115-TC-3", school: "慈濟", year: "115", qnum: "3",
-                sentence: "The patient's symptoms were so ____ that the diagnostic team had difficulty pinpointing the underlying autoimmune disorder.",
-                options: ["(A) manifest", "(B) pellucid", "(C) nebulous", "(D) poignant"],
-                keywords: ["patient", "symptoms", "diagnostic", "team", "difficulty", "pinpointing", "underlying", "autoimmune", "disorder", "manifest", "pellucid", "nebulous", "poignant"]
-            },
-            {
-                id: "115-TC-4", school: "慈濟", year: "115", qnum: "4",
-                sentence: "To ____ the spread of the avian flu, the government implemented strict quarantine measures at all borders.",
-                options: ["(A) bolster", "(B) foster", "(C) catalyze", "(D) curtail"],
-                keywords: ["spread", "avian", "flu", "government", "implemented", "strict", "quarantine", "measures", "borders", "bolster", "foster", "catalyze", "curtail"]
-            },
-            {
-                id: "115-TC-5", school: "慈濟", year: "115", qnum: "5",
-                sentence: "Somewhat counterintuitively, chatbots may excel at solving difficult ____ but they often struggle with basic health decisions.",
-                options: ["(A) quandaries", "(B) expeditions", "(C) diminutions", "(D) quarries"],
-                keywords: ["counterintuitively", "chatbots", "excel", "solving", "difficult", "struggle", "basic", "health", "decisions", "quandaries", "expeditions", "diminutions", "quarries"]
-            },
-            {
-                id: "115-TC-11", school: "慈濟", year: "115", qnum: "11",
-                sentence: "Jensen Huang leads Nvidia to the forefront of AI innovation, and his career reaches its ____ as the company transforms the future of technology.",
-                options: ["(A) terminus", "(B) nadir", "(C) zenith", "(D) zephyr"],
-                keywords: ["jensen", "huang", "nvidia", "forefront", "ai", "innovation", "career", "reaches", "zenith", "transforms", "future", "technology", "terminus", "nadir", "zephyr"]
-            },
-            {
-                id: "115-TC-15", school: "慈濟", year: "115", qnum: "15",
-                sentence: "Looking to recover from the taxing effects of urban pollution, we had to move to a house in a/an ____ area, which is pleasant, clean, and healthy to live in.",
-                options: ["(A) salubrious", "(B) salutary", "(C) noxious", "(D) aseptic"],
-                keywords: ["recover", "taxing", "effects", "urban", "pollution", "move", "house", "area", "pleasant", "clean", "healthy", "salubrious", "salutary", "noxious", "aseptic"]
-            },
-            {
-                id: "112-CMU-1", school: "中國醫", year: "112", qnum: "1",
-                sentence: "Police ____ on high-crime neighborhoods in response to a recent rise in violent crime.",
-                options: ["(A) touched down", "(B) turned down", "(C) cracked down", "(D) ran down"],
-                keywords: ["police", "cracked", "crack", "high-crime", "neighborhoods", "response", "recent", "rise", "violent", "crime", "touched", "turned", "ran"]
-            }
-        ];
-
-        let selectedWord = null;
-        let chartInstance = null;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            initChart();
-            renderWordList();
-            renderSentences();
-        });
-
-        function toggleImportModal(show) {
-            const modal = document.getElementById('importModal');
-            if (show) modal.classList.remove('hidden');
-            else modal.classList.add('hidden');
-        }
-
-        function onFilterChange() {
-            renderWordList();
-            renderSentences();
-        }
-
-        function getWordFrequencies() {
-            const freqMap = {};
-            const filterSchool = document.getElementById('schoolSelect').value;
-
-            examDatabase.forEach(item => {
-                if (filterSchool !== 'ALL' && item.school !== filterSchool) return;
-                item.keywords.forEach(kw => {
-                    const clean = kw.toLowerCase().replace(/[^a-z]/g, '');
-                    if (clean.length > 2 && !STOP_WORDS.has(clean)) {
-                        freqMap[clean] = (freqMap[clean] || 0) + 1;
-                    }
-                });
-            });
-            return freqMap;
-        }
-
-        function renderWordList() {
-            const freqMap = getWordFrequencies();
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-            const sortBy = document.getElementById('sortSelect').value;
-
-            let words = Object.keys(freqMap).filter(w => w.includes(searchTerm));
-            if (sortBy === 'freq') words.sort((a, b) => freqMap[b] - freqMap[a]);
-            else words.sort();
-
-            const wordListEl = document.getElementById('wordList');
-            document.getElementById('wordCountBadge').innerText = `${words.length} 字`;
-            wordListEl.innerHTML = '';
-
-            if (words.length === 0) {
-                wordListEl.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs">查無符合單字</div>`;
-                return;
-            }
-
-            words.forEach(word => {
-                const count = freqMap[word];
-                const isSelected = selectedWord === word;
-                const item = document.createElement('div');
-                item.className = `flex justify-between items-center p-3 cursor-pointer hover:bg-slate-50 transition rounded-lg text-sm ${isSelected ? 'bg-emerald-50 text-emerald-700 font-semibold border-l-4 border-emerald-500' : 'text-slate-700'}`;
-                item.onclick = () => selectWord(word);
-                item.innerHTML = `
-                    <span class="capitalize">${word}</span>
-                    <span class="text-xs px-2 py-0.5 rounded-full ${isSelected ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500'} font-medium">${count} 次</span>
-                `;
-                wordListEl.appendChild(item);
-            });
-        }
-
-        function selectWord(word) {
-            selectedWord = word;
-            document.getElementById('chipWord').innerText = word;
-            document.getElementById('activeWordChip').classList.remove('hidden');
-            document.getElementById('activeWordChip').classList.add('flex');
-            document.getElementById('chartTitle').innerText = `「${word}」歷年出題頻率比較`;
-
-            renderWordList();
-            updateChart(word);
-            renderSentences(word);
-        }
-
-        function clearActiveWord() {
-            selectedWord = null;
-            document.getElementById('activeWordChip').classList.add('hidden');
-            document.getElementById('activeWordChip').classList.remove('flex');
-            document.getElementById('chartTitle').innerText = '單字歷年出現頻率趨勢';
-
-            renderWordList();
-            updateChart(null);
-            renderSentences(null);
-        }
-
-        function renderSentences(filterWord = selectedWord) {
-            const container = document.getElementById('sentenceContainer');
-            const schoolFilter = document.getElementById('schoolSelect').value;
-            container.innerHTML = '';
-
-            let filtered = examDatabase.filter(item => {
-                if (schoolFilter !== 'ALL' && item.school !== schoolFilter) return false;
-                if (!filterWord) return true;
-                return item.keywords.some(k => k.toLowerCase().includes(filterWord.toLowerCase()));
-            });
-
-            document.getElementById('sentenceCountBadge').innerText = `共 ${filtered.length} 筆語境`;
-
-            if (filtered.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs">尚無相關題庫資料</div>`;
-                return;
-            }
-
-            filtered.forEach(item => {
-                let highlightedSentence = item.sentence;
-                if (filterWord) {
-                    const regex = new RegExp(`(${filterWord})`, 'gi');
-                    highlightedSentence = item.sentence.replace(regex, `<mark class="bg-yellow-200 text-slate-900 px-1 rounded">$1</mark>`);
-                }
-                const optionsHTML = item.options ? item.options.map(opt => `<span class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs text-slate-600">${opt}</span>`).join(' ') : '';
-                const card = document.createElement('div');
-                card.className = "bg-slate-50/50 border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition space-y-2";
-                card.innerHTML = `
-                    <div class="flex items-center justify-between text-xs">
-                        <div class="flex items-center space-x-2">
-                            <span class="bg-slate-800 text-white font-bold px-2 py-0.5 rounded text-[10px]">${item.school}</span>
-                            <span class="text-slate-500 font-medium">${item.year} 學年度</span>
-                            <span class="text-slate-400">第 ${item.qnum} 題</span>
-                        </div>
-                    </div>
-                    <p class="text-sm text-slate-800 leading-relaxed font-serif">${highlightedSentence}</p>
-                    ${optionsHTML ? `<div class="pt-2 flex flex-wrap gap-2">${optionsHTML}</div>` : ''}
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function initChart() {
-            const ctx = document.getElementById('trendChart').getContext('2d');
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['111年', '112年', '113年', '114年', '115年'],
-                    datasets: [
-                        { label: '中國醫', data: [0, 1, 0, 0, 0], borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.3 },
-                        { label: '慈濟', data: [0, 0, 0, 0, 7], borderColor: '#3b82f6', backgroundColor: '#3b82f6', tension: 0.3 },
-                        { label: '義守', data: [0, 0, 0, 0, 0], borderColor: '#f59e0b', backgroundColor: '#f59e0b', tension: 0.3 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'top' } },
-                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-                }
-            });
-        }
-
-        function updateChart(word) {
-            const years = ['111', '112', '113', '114', '115'];
-            const counts = { '中國醫': [0,0,0,0,0], '慈濟': [0,0,0,0,0], '義守': [0,0,0,0,0] };
-
-            examDatabase.forEach(item => {
-                const yearIdx = years.indexOf(item.year);
-                if (yearIdx !== -1 && counts[item.school]) {
-                    if (!word || item.keywords.some(k => k.toLowerCase().includes(word.toLowerCase()))) {
-                        counts[item.school][yearIdx]++;
-                    }
-                }
-            });
-
-            chartInstance.data.datasets[0].data = counts['中國醫'];
-            chartInstance.data.datasets[1].data = counts['慈濟'];
-            chartInstance.data.datasets[2].data = counts['義守'];
-            chartInstance.update();
-        }
-
-        async function handlePDFFileSelect(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            if (file.name.endsWith('.pdf')) {
-                try {
-                    const arrayBuffer = await file.arrayBuffer();
-                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                    let fullText = '';
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        const textContent = await page.getTextContent();
-                        fullText += textContent.items.map(item => item.str).join(' ') + '\n';
-                    }
-                    document.getElementById('importTextarea').value = fullText;
-                    alert(`已成功讀取 PDF「${file.name}」，共 ${pdf.numPages} 頁內容！已自動填入文字區。`);
-                } catch(err) {
-                    alert('PDF 解析受限，請直接複製 PDF 文字並貼到下方文字框中即可。');
-                }
-            } else {
-                const text = await file.text();
-                document.getElementById('importTextarea').value = text;
-            }
-        }
-
-        function handleManualTextImport() {
-            const text = document.getElementById('importTextarea').value.trim();
-            const school = document.getElementById('importSchool').value;
-            const year = document.getElementById('importYear').value;
-
-            if (!text) {
-                alert('請貼上考題文字或選擇檔案');
-                return;
-            }
-
-            const lines = text.split('\n');
-            let countAdded = 0;
-
-            lines.forEach((line, idx) => {
-                const trimmed = line.trim();
-                if (/^\d+\./.test(trimmed)) {
-                    const words = trimmed.replace(/[^\w\s]/gi, '').split(/\s+/);
-                    examDatabase.push({
-                        id: `${year}-${school}-${idx}`,
-                        school: school,
-                        year: year,
-                        qnum: trimmed.match(/^\d+/)[0],
-                        sentence: trimmed,
-                        options: [],
-                        keywords: words
-                    });
-                    countAdded++;
-                }
-            });
-
-            if (countAdded === 0) {
-                const words = text.replace(/[^\w\s]/gi, '').split(/\s+/);
-                examDatabase.push({
-                    id: `${year}-${school}-batch`,
-                    school: school,
-                    year: year,
-                    qnum: "整份匯入",
-                    sentence: text.substring(0, 300) + "...",
-                    options: [],
-                    keywords: words
-                });
-                countAdded = 1;
-            }
-
-            alert(`成功解析並新增 ${countAdded} 筆真題資料庫紀錄！`);
-            toggleImportModal(false);
-            document.getElementById('importTextarea').value = '';
-
-            renderWordList();
-            renderSentences();
-            if (selectedWord) updateChart(selectedWord);
-        }
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>

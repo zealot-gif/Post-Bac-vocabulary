@@ -8,27 +8,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- PDF.js for client-side PDF text extraction -->
+    <!-- PDF.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    </script>
-    <!-- FontAwesome for icons -->
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-800 min-h-screen flex flex-col">
@@ -45,8 +32,9 @@
                     <p class="text-xs text-slate-400">中國醫 / 慈濟 / 義守 歷屆真題統計與語境調閱</p>
                 </div>
             </div>
-            <div class="flex items-center space-x-3">
-                <button id="btnOpenImport" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-4 py-2 rounded-lg transition-all flex items-center shadow">
+            <div>
+                <!-- 使用 onclick 直連函數，避免 addEventListener 被前端錯誤中斷 -->
+                <button onclick="toggleImportModal(true)" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-4 py-2 rounded-lg transition-all flex items-center shadow cursor-pointer">
                     <i class="fa-solid fa-file-pdf mr-2"></i> 匯入真題 (PDF/文字)
                 </button>
             </div>
@@ -55,23 +43,19 @@
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-6 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-        <!-- Left Column: Controls & Word Frequency (4 cols) -->
+        <!-- Left Column: Controls & Word Frequency -->
         <div class="lg:col-span-4 flex flex-col gap-6">
-
-            <!-- Search & Filters Card -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
                 <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">單字搜尋與比對</h2>
                 <div class="relative mb-4">
-                    <input type="text" id="searchInput" placeholder="輸入英文單字 (如: shield, zenith)..." 
+                    <input type="text" id="searchInput" oninput="renderWordList()" placeholder="輸入英文單字 (如: shield, zenith)..." 
                            class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
                 </div>
-
                 <div class="grid grid-cols-2 gap-3 text-xs">
                     <div>
                         <label class="block font-medium text-slate-600 mb-1">學校篩選</label>
-                        <select id="schoolSelect" class="w-full border border-slate-300 rounded-md p-2 bg-white">
+                        <select id="schoolSelect" onchange="onFilterChange()" class="w-full border border-slate-300 rounded-md p-2 bg-white">
                             <option value="ALL">全部學校</option>
                             <option value="中國醫">中國醫</option>
                             <option value="慈濟">慈濟</option>
@@ -80,7 +64,7 @@
                     </div>
                     <div>
                         <label class="block font-medium text-slate-600 mb-1">排序方式</label>
-                        <select id="sortSelect" class="w-full border border-slate-300 rounded-md p-2 bg-white">
+                        <select id="sortSelect" onchange="renderWordList()" class="w-full border border-slate-300 rounded-md p-2 bg-white">
                             <option value="freq">出現總次數 ⬇</option>
                             <option value="alpha">字母順序 ⬆</option>
                         </select>
@@ -88,23 +72,17 @@
                 </div>
             </div>
 
-            <!-- High Frequency Words List Card -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex-grow flex flex-col min-h-[400px]">
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">真題單字庫 <span id="wordCountBadge" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full ml-1">0 字</span></h2>
                     <span class="text-xs text-slate-400">點擊單字查看趨勢</span>
                 </div>
-
-                <div id="wordList" class="custom-scrollbar overflow-y-auto flex-grow divide-y divide-slate-100 max-h-[500px]">
-                    <!-- Single word items rendered dynamically -->
-                </div>
+                <div id="wordList" class="custom-scrollbar overflow-y-auto flex-grow divide-y divide-slate-100 max-h-[500px]"></div>
             </div>
         </div>
 
-        <!-- Right Column: Trends Chart & Sentence Context (8 cols) -->
+        <!-- Right Column: Trends Chart & Context -->
         <div class="lg:col-span-8 flex flex-col gap-6">
-
-            <!-- Google Trends Chart Card -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
                     <div>
@@ -113,17 +91,14 @@
                     </div>
                     <div id="activeWordChip" class="hidden items-center bg-slate-800 text-white px-3 py-1 rounded-full text-xs font-medium">
                         目前單字: <span id="chipWord" class="font-bold text-emerald-400 ml-1"></span>
-                        <button id="btnClearActiveWord" class="ml-2 hover:text-red-400"><i class="fa-solid fa-xmark"></i></button>
+                        <button onclick="clearActiveWord()" class="ml-2 hover:text-red-400"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                 </div>
-
-                <!-- Canvas Chart Container -->
                 <div class="relative w-full h-[280px]">
                     <canvas id="trendChart"></canvas>
                 </div>
             </div>
 
-            <!-- Context Sentence List Card -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex-grow flex flex-col min-h-[350px]">
                 <div class="flex justify-between items-center mb-4">
                     <div>
@@ -132,16 +107,12 @@
                     </div>
                     <span id="sentenceCountBadge" class="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-md font-medium">共 0 筆語境</span>
                 </div>
-
-                <!-- Context Sentence Container -->
-                <div id="sentenceContainer" class="custom-scrollbar overflow-y-auto flex-grow space-y-4 max-h-[450px]">
-                    <!-- Sentences rendered dynamically -->
-                </div>
+                <div id="sentenceContainer" class="custom-scrollbar overflow-y-auto flex-grow space-y-4 max-h-[450px]"></div>
             </div>
         </div>
     </main>
 
-    <!-- Import Modal (Supports Direct PDF Upload & Text Parsing) -->
+    <!-- Import Modal -->
     <div id="importModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full mx-4 overflow-hidden flex flex-col max-h-[90vh]">
             <div class="bg-slate-900 px-6 py-4 text-white flex justify-between items-center">
@@ -149,13 +120,12 @@
                     <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i>
                     <h3 class="font-bold text-base">匯入歷屆試題 (支援直接讀取 PDF)</h3>
                 </div>
-                <button id="btnCloseImportModal" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button onclick="toggleImportModal(false)" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
 
             <div class="p-6 overflow-y-auto custom-scrollbar flex-grow space-y-5">
-                <!-- PDF Upload Zone -->
                 <div class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-xl p-6 text-center transition bg-slate-50 hover:bg-emerald-50/30 group cursor-pointer relative">
-                    <input type="file" id="pdfFileInput" accept=".pdf,.txt" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    <input type="file" id="pdfFileInput" onchange="handlePDFFileSelect(event)" accept=".pdf,.txt" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                     <div class="flex flex-col items-center">
                         <i class="fa-solid fa-file-pdf text-4xl text-slate-400 group-hover:text-emerald-500 mb-2 transition"></i>
                         <p class="text-sm font-semibold text-slate-700">點擊或拖放 PDF 官方試題檔至此</p>
@@ -169,7 +139,6 @@
                     <div class="flex-grow border-t border-slate-200"></div>
                 </div>
 
-                <!-- Text Input Metadata Fields -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">對應學校</label>
@@ -193,15 +162,19 @@
             </div>
 
             <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-end space-x-3">
-                <button id="btnCancelImport" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">取消</button>
-                <button id="btnSubmitImport" class="px-4 py-2 text-xs font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition">開始解析並載入資料庫</button>
+                <button onclick="toggleImportModal(false)" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">取消</button>
+                <button onclick="handleManualTextImport()" class="px-4 py-2 text-xs font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition">開始解析並載入資料庫</button>
             </div>
         </div>
     </div>
 
-    <!-- Application Logic Script -->
+    <!-- Application Script -->
     <script>
-        // Stop words list for filtering non-essential words
+        // 設定 PDF.js worker CDN (使用安全相容載入)
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
         const STOP_WORDS = new Set([
             "a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at", 
             "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can", "can't", "cannot", "could",
@@ -213,7 +186,6 @@
             "up", "very", "was", "we", "were", "what", "when", "where", "which", "while", "who", "whom", "why", "with", "would", "you", "your"
         ]);
 
-        // Real Exam Initial Database (115 Tzu Chi & 112 CMU authentic questions)
         let examDatabase = [
             {
                 id: "115-TC-1", school: "慈濟", year: "115", qnum: "1",
@@ -265,44 +237,32 @@
             }
         ];
 
-        // State Management
         let selectedWord = null;
         let chartInstance = null;
 
-        // Core Initialization
         document.addEventListener('DOMContentLoaded', () => {
             initChart();
             renderWordList();
             renderSentences();
-            bindEvents();
         });
 
-        // Event Listeners
-        function bindEvents() {
-            document.getElementById('searchInput').addEventListener('input', renderWordList);
-            document.getElementById('schoolSelect').addEventListener('change', () => { renderWordList(); renderSentences(); });
-            document.getElementById('sortSelect').addEventListener('change', renderWordList);
-            document.getElementById('btnClearActiveWord').addEventListener('click', clearActiveWord);
-
-            // Modal Handlers
+        function toggleImportModal(show) {
             const modal = document.getElementById('importModal');
-            document.getElementById('btnOpenImport').addEventListener('click', () => modal.classList.remove('hidden'));
-            document.getElementById('btnCloseImportModal').addEventListener('click', () => modal.classList.add('hidden'));
-            document.getElementById('btnCancelImport').addEventListener('click', () => modal.classList.add('hidden'));
-            document.getElementById('btnSubmitImport').addEventListener('click', handleManualTextImport);
-
-            // PDF File Drop / Selection Handler
-            document.getElementById('pdfFileInput').addEventListener('change', handlePDFFileSelect);
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
         }
 
-        // Calculate Word Frequencies
+        function onFilterChange() {
+            renderWordList();
+            renderSentences();
+        }
+
         function getWordFrequencies() {
             const freqMap = {};
             const filterSchool = document.getElementById('schoolSelect').value;
 
             examDatabase.forEach(item => {
                 if (filterSchool !== 'ALL' && item.school !== filterSchool) return;
-
                 item.keywords.forEach(kw => {
                     const clean = kw.toLowerCase().replace(/[^a-z]/g, '');
                     if (clean.length > 2 && !STOP_WORDS.has(clean)) {
@@ -310,23 +270,17 @@
                     }
                 });
             });
-
             return freqMap;
         }
 
-        // Render Word Frequency List
         function renderWordList() {
             const freqMap = getWordFrequencies();
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
             const sortBy = document.getElementById('sortSelect').value;
 
             let words = Object.keys(freqMap).filter(w => w.includes(searchTerm));
-
-            if (sortBy === 'freq') {
-                words.sort((a, b) => freqMap[b] - freqMap[a]);
-            } else {
-                words.sort();
-            }
+            if (sortBy === 'freq') words.sort((a, b) => freqMap[b] - freqMap[a]);
+            else words.sort();
 
             const wordListEl = document.getElementById('wordList');
             document.getElementById('wordCountBadge').innerText = `${words.length} 字`;
@@ -343,7 +297,6 @@
                 const item = document.createElement('div');
                 item.className = `flex justify-between items-center p-3 cursor-pointer hover:bg-slate-50 transition rounded-lg text-sm ${isSelected ? 'bg-emerald-50 text-emerald-700 font-semibold border-l-4 border-emerald-500' : 'text-slate-700'}`;
                 item.onclick = () => selectWord(word);
-
                 item.innerHTML = `
                     <span class="capitalize">${word}</span>
                     <span class="text-xs px-2 py-0.5 rounded-full ${isSelected ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500'} font-medium">${count} 次</span>
@@ -352,7 +305,6 @@
             });
         }
 
-        // Select Word for Analysis
         function selectWord(word) {
             selectedWord = word;
             document.getElementById('chipWord').innerText = word;
@@ -376,7 +328,6 @@
             renderSentences(null);
         }
 
-        // Render Sentence Context
         function renderSentences(filterWord = selectedWord) {
             const container = document.getElementById('sentenceContainer');
             const schoolFilter = document.getElementById('schoolSelect').value;
@@ -401,9 +352,7 @@
                     const regex = new RegExp(`(${filterWord})`, 'gi');
                     highlightedSentence = item.sentence.replace(regex, `<mark class="bg-yellow-200 text-slate-900 px-1 rounded">$1</mark>`);
                 }
-
                 const optionsHTML = item.options ? item.options.map(opt => `<span class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs text-slate-600">${opt}</span>`).join(' ') : '';
-
                 const card = document.createElement('div');
                 card.className = "bg-slate-50/50 border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition space-y-2";
                 card.innerHTML = `
@@ -421,7 +370,6 @@
             });
         }
 
-        // Chart.js Initialize & Update
         function initChart() {
             const ctx = document.getElementById('trendChart').getContext('2d');
             chartInstance = new Chart(ctx, {
@@ -445,8 +393,6 @@
 
         function updateChart(word) {
             const years = ['111', '112', '113', '114', '115'];
-            const schools = ['中國醫', '慈濟', '義守'];
-
             const counts = { '中國醫': [0,0,0,0,0], '慈濟': [0,0,0,0,0], '義守': [0,0,0,0,0] };
 
             examDatabase.forEach(item => {
@@ -464,45 +410,42 @@
             chartInstance.update();
         }
 
-        // Direct PDF Reading Functionality
         async function handlePDFFileSelect(e) {
             const file = e.target.files[0];
             if (!file) return;
 
             if (file.name.endsWith('.pdf')) {
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                let fullText = '';
-
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    fullText += textContent.items.map(item => item.str).join(' ') + '
-';
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    let fullText = '';
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        fullText += textContent.items.map(item => item.str).join(' ') + '\n';
+                    }
+                    document.getElementById('importTextarea').value = fullText;
+                    alert(`已成功讀取 PDF「${file.name}」，共 ${pdf.numPages} 頁內容！已自動填入文字區。`);
+                } catch(err) {
+                    alert('PDF 解析受限，請直接複製 PDF 文字並貼到下方文字框中即可。');
                 }
-
-                document.getElementById('importTextarea').value = fullText;
-                alert(`已成功讀取 PDF「${file.name}」，共 ${pdf.numPages} 頁內容！已自動填入下方文字區域。`);
             } else {
                 const text = await file.text();
                 document.getElementById('importTextarea').value = text;
             }
         }
 
-        // Handle Manual / Batch Text Import
         function handleManualTextImport() {
             const text = document.getElementById('importTextarea').value.trim();
             const school = document.getElementById('importSchool').value;
             const year = document.getElementById('importYear').value;
 
             if (!text) {
-                alert('請貼上考題文字或選擇 PDF 檔案');
+                alert('請貼上考題文字或選擇檔案');
                 return;
             }
 
-            // Simple question parser algorithm
-            const lines = text.split('
-');
+            const lines = text.split('\n');
             let countAdded = 0;
 
             lines.forEach((line, idx) => {
@@ -523,7 +466,6 @@
             });
 
             if (countAdded === 0) {
-                // Fallback: parse entire block
                 const words = text.replace(/[^\w\s]/gi, '').split(/\s+/);
                 examDatabase.push({
                     id: `${year}-${school}-batch`,
@@ -538,7 +480,7 @@
             }
 
             alert(`成功解析並新增 ${countAdded} 筆真題資料庫紀錄！`);
-            document.getElementById('importModal').classList.add('hidden');
+            toggleImportModal(false);
             document.getElementById('importTextarea').value = '';
 
             renderWordList();
